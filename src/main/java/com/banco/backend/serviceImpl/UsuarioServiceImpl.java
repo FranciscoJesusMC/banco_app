@@ -128,6 +128,8 @@ public class UsuarioServiceImpl implements UsuarioService {
 		
 		usuarioRepositorio.delete(usuario);
 	}
+	
+	
 	@Override
 	public UsuarioDTO buscarUsuario(long usuarioId) {
 		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
