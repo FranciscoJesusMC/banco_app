@@ -1,5 +1,7 @@
 package com.banco.backend.dto;
 
+
+import java.math.BigDecimal;
 import java.sql.Time;
 import java.util.Date;
 import java.util.UUID;
@@ -24,7 +26,8 @@ public class TransferenciaDTO {
 
 	private UUID cuentaDestino;
 	
-	private float monto;
+
+	private BigDecimal monto;
 	
 	private DetalleMovimiento detalleMovimiento;
 

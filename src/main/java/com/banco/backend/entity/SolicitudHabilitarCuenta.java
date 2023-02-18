@@ -1,15 +1,11 @@
 package com.banco.backend.entity;
 
-
-import java.math.BigDecimal;
-
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -20,32 +16,21 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@NoArgsConstructor
 @Entity
-@Table(name = "movimientos")
-public class Movimiento extends AudtiModel {
-	
+@NoArgsConstructor
+@Table(name = "solicitud_habilitar_cuenta")
+public class SolicitudHabilitarCuenta extends AudtiModel {
+
 	private static final long serialVersionUID = 1L;
 	
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
-
-	@JsonBackReference(value = "movimientos-cuenta")
+	private String motivo;
+	private String estado;
+	
+	@JsonBackReference(value = "cuenta-solicitud")
 	@ManyToOne
 	@JoinColumn(name = "cuenta_id")
 	private Cuenta cuenta;
-
-	@OneToOne
-	@JoinColumn(name = "tipoTransaccion_id")
-	private TipoTransaccion tipoTransaccion;
-
-	private BigDecimal Monto;
-
-	@OneToOne
-	@JoinColumn(name = "detalle_movimiento_id")
-	private DetalleMovimiento detalleMovimiento;
-
-
 }

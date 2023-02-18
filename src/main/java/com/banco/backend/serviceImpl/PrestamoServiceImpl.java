@@ -1,5 +1,6 @@
 package com.banco.backend.serviceImpl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -57,12 +58,22 @@ public class PrestamoServiceImpl implements PrestamoService {
 		if(!cuenta.getUsuario().getId().equals(usuario.getId())) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta : " + cuentaId + "  no pertenece al usuarioId : +" + usuarioId);
 		}
+		
 				
 		List<Prestamo> prestamos = prestamoRepositorio.findByCuentaId(cuentaId);
-		if(prestamos.isEmpty()) {
+		
+		List<Prestamo> pendientes= new ArrayList<>();
+		
+		prestamos.forEach(prestamo ->{
+			if(prestamo.getEstado().equals("Pendiente")) {
+				pendientes.add(prestamo);
+			}
+		});
+		
+		if(pendientes.isEmpty()) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST,"La cuenta no tiene prestamos");
 		}
-		return prestamos.stream().map(prestamo -> mapper.prestamotoPrestamoDTO(prestamo)).collect(Collectors.toList());
+		return pendientes.stream().map(prestamo -> mapper.prestamotoPrestamoDTO(prestamo)).collect(Collectors.toList());
 	}
 
 	@Override
@@ -82,31 +93,32 @@ public class PrestamoServiceImpl implements PrestamoService {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta : " + cuentaId + "  no pertenece al usuarioId : +" + usuarioId);
 		}
 		
-		if(cuenta.getEstado().equals("Inhabilitado")) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta inhabilitada");
+		if(cuenta.getEstado().equals("Deshabilitada")) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta Deshabilitada");
 		}
 		
 		Prestamo prestamo = mapper.prestamoDTOtoPrestamo(prestamoDTO);
 		
-		float interes = 5;
+		double interes = 5;
 		
 		prestamo.setImporte(prestamoDTO.getImporte());
 		prestamo.setCuotas(prestamoDTO.getCuotas());
 		prestamo.setTasaDeInteres(interes);
 		
-		float interesaP = ((prestamoDTO.getImporte() * prestamoDTO.getCuotas()) *(interes/100));
+		double interesaP = ((prestamoDTO.getImporte() * prestamoDTO.getCuotas()) *(interes/100));
 		
-		prestamo.setInteresApagar(interesaP);
 		
-		float cuotaM = ((prestamoDTO.getImporte() / prestamoDTO.getCuotas()) + (interesaP/prestamoDTO.getCuotas()));
-		
+		double cuotaM = ((prestamoDTO.getImporte() / prestamoDTO.getCuotas()) + (interesaP/prestamoDTO.getCuotas()));
+
 		prestamo.setCuotaMensual(cuotaM);
 		
-		float total = (prestamoDTO.getImporte() +  interesaP);
-		
+		double total = (prestamoDTO.getImporte() +  interesaP);
+			
 		prestamo.setDeudaTotal(total);
 		prestamo.setCuenta(cuenta);
 		prestamo.setEstado("Pendiente");
+		
+		cuentaRepositorio.save(cuenta);
 		
 		Prestamo guardarPrestamo = prestamoRepositorio.save(prestamo);
 		
@@ -116,52 +128,71 @@ public class PrestamoServiceImpl implements PrestamoService {
 	}
 
 	@Override
-	public void aprobarPrestamo(long bancoId, UUID cuentaId,long prestamoId) {
+	public List<PrestamoDTO> listarPrestamosAprobados(long bancoId, long usuarioId, UUID cuentaId) {
+	
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
+		
+		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
 		
 		Cuenta cuenta = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
 		
-		Prestamo prestamo = prestamoRepositorio.findById(prestamoId).orElseThrow(()-> new ResourceNotFoundException("Prestamo", "id", prestamoId));
+		List<Prestamo> listaPrestamos = prestamoRepositorio.findByCuentaId(cuentaId);
 		
 		if(!cuenta.getBanco().getId().equals(banco.getId())) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no pertenece al banco");
 		}
 		
-		if(!prestamo.getCuenta().getId().equals(cuenta.getId())) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La prestamo : " + prestamoId + "  no pertenece a la cuenta : +" + cuentaId);
+		if(!cuenta.getUsuario().getId().equals(usuario.getId())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta : " + cuentaId + "  no pertenece al usuarioId : +" + usuarioId);
 		}
 		
-
-		prestamo.setEstado("Aprobado");
-		prestamoRepositorio.save(prestamo);
+		List<Prestamo> aprobados = new ArrayList<>();
 		
-		float nuevoSaldo =  prestamo.getImporte() +cuenta.getSaldo();
-		cuenta.setSaldo(nuevoSaldo);
+		listaPrestamos.forEach(prestamo ->{
+			if(prestamo.getEstado().equals("Aprobado")) {
+				aprobados.add(prestamo);
+			}
+		});
 		
-		cuentaRepositorio.save(cuenta);
+		if(aprobados.isEmpty()) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "No hay prestamos aprobados");
+		}
 		
+		return aprobados.stream().map(prestamo -> mapper.prestamotoPrestamoDTO(prestamo)).collect(Collectors.toList());
 	}
 
 	@Override
-	public void rechazarPrestamo(long bancoId, UUID cuentaId, long prestamoId) {
+	public List<PrestamoDTO> listarPrestamosRechazados(long bancoId, long usuarioId, UUID cuentaId) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
+		
+		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
 		
 		Cuenta cuenta = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
 		
-		Prestamo prestamo = prestamoRepositorio.findById(prestamoId).orElseThrow(()-> new ResourceNotFoundException("Prestamo", "id", prestamoId));
+		List<Prestamo> listaPrestamos = prestamoRepositorio.findByCuentaId(cuentaId);
 		
 		if(!cuenta.getBanco().getId().equals(banco.getId())) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no pertenece al banco");
 		}
 		
-		if(!prestamo.getCuenta().getId().equals(cuenta.getId())) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La prestamo : " + prestamoId + "  no pertenece a la cuenta : +" + cuentaId);
+		if(!cuenta.getUsuario().getId().equals(usuario.getId())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta : " + cuentaId + "  no pertenece al usuarioId : +" + usuarioId);
 		}
 		
-		prestamo.setEstado("Rechazado");
-		prestamoRepositorio.save(prestamo);
 		
+		List<Prestamo> rechazados = new ArrayList<>();
 		
+		listaPrestamos.forEach(prestamo ->{
+			if(prestamo.getEstado().equals("Rechazado")) {
+				rechazados.add(prestamo);
+			}
+		});
 		
+		if(rechazados.isEmpty()) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "No hay prestamos rechazados");
+		}
+		
+		return rechazados.stream().map(prestamo -> mapper.prestamotoPrestamoDTO(prestamo)).collect(Collectors.toList());
 	}
+
 }

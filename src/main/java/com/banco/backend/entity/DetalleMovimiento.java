@@ -1,5 +1,6 @@
 package com.banco.backend.entity;
 
+import java.math.BigDecimal;
 import java.util.UUID;
 
 import javax.persistence.Column;
@@ -42,7 +43,7 @@ public class DetalleMovimiento {
 
 	private String bancoDestino;
 
-	private float comision;
+	private BigDecimal comision;
 
-	private float montoTotal;
+	private BigDecimal montoTotal;
 }

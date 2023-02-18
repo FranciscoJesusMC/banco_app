@@ -1,5 +1,8 @@
 package com.banco.backend.dto;
 
+import java.math.BigDecimal;
+import java.sql.Date;
+
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotEmpty;
 
@@ -10,6 +13,8 @@ import lombok.Setter;
 @Setter
 public class PrestamoDTO {
 
+	private long id;
+	
 	@NotEmpty(message = "EL campo importe no puede estar vacio")
 	@Max(1000000)
 	private float importe;
@@ -18,13 +23,13 @@ public class PrestamoDTO {
 	@Max(value = 24,message = "El maxico de cuotas es 24")
 	private int cuotas;
 
-	private float tasaDeInteres;
+	private BigDecimal tasaDeInteres;
 	
-	private float interesApagar;
+	private BigDecimal cuotaMensual;
 	
-	private float cuotaMensual;
-	
+	private BigDecimal deudaTotal;
+
 	private String estado;
 	
-	private float deudaTotal;
+	private Date fechaCreacion;
 }

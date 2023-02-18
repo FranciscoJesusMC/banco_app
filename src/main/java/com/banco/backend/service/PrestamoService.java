@@ -11,8 +11,10 @@ public interface PrestamoService {
 	
 	public PrestamoDTO generarPrestamo(long bancoId,long usuarioId,UUID cuentaId,PrestamoDTO prestamoDTO);
 	
-	public void aprobarPrestamo(long bancoId,UUID cuentaId,long prestamoId);
+	public List<PrestamoDTO> listarPrestamosAprobados(long bancoId,long usuarioId,UUID cuentaId);
 	
-	public void rechazarPrestamo(long bancoId,UUID cuentaId,long prestamoId);
+	public List<PrestamoDTO> listarPrestamosRechazados(long bancoId,long usuarioId,UUID cuentaId);
+	
+	
 	
 }

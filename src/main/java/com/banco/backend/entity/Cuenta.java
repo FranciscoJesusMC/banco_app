@@ -1,13 +1,16 @@
 package com.banco.backend.entity;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
+
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -42,7 +45,9 @@ public class Cuenta extends AudtiModel {
 	  @Type(type = "uuid-char")
 	  private UUID id;
 	  
-	  private float saldo;
+	  private BigDecimal saldo;
+	  
+	  private BigDecimal limiteDelDia;
 	  
 	  private String estado;
 	  
@@ -51,13 +56,12 @@ public class Cuenta extends AudtiModel {
 	  private int retirorsDelDia;
 	  
 	  @JsonBackReference(value = "banco-cuenta")
-	  @ManyToOne(fetch = FetchType.LAZY)
+	  @ManyToOne
 	  @JoinColumn(name = "banco_id")
 	  private Banco banco;
 	  
-
 	  @JsonBackReference(value = "usuario-cuenta")
-	  @ManyToOne(fetch = FetchType.LAZY)
+	  @ManyToOne
 	  @JoinColumn(name = "usuario_id")
 	  private Usuario usuario;
 	  
@@ -72,4 +76,8 @@ public class Cuenta extends AudtiModel {
 	  @JsonManagedReference(value = "cuenta-prestamo")
 	  @OneToMany(mappedBy = "cuenta",cascade = CascadeType.ALL,orphanRemoval = true)
 	  private Set<Prestamo> prestamo = new HashSet<>();
+	  
+	  @JsonManagedReference(value = "cuenta-solicitud")
+	  @OneToMany(mappedBy = "cuenta")
+	  private List<SolicitudHabilitarCuenta> solicitudHabilitarCuenta = new ArrayList<>();
 }

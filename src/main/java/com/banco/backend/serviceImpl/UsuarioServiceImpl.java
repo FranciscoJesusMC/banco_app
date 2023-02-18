@@ -68,6 +68,7 @@ public class UsuarioServiceImpl implements UsuarioService {
 		UsuarioDTO guardarUsuario = mapper.usuariotoUsuarioDTO(nuevoUsuario);
 		
 		return guardarUsuario;
+		
 	}
 	@Override
 	public UsuarioDTO buscarUsuarioPorBancoId(long bancoId, long usuarioId) {
@@ -95,13 +96,13 @@ public class UsuarioServiceImpl implements UsuarioService {
 		}
 		
 		for(int i = 0 ;i <listaUsuarios.size(); i++) {
-			if(listaUsuarios.get(i).getDni() == usuarioDTO.getDni()) {
+			if(listaUsuarios.get(i).getDni().equals(usuarioDTO.getDni())) {
 				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getDni() + " ya se encuentra registrado");
 			}
 			if(listaUsuarios.get(i).getEmail().equals(usuarioDTO.getEmail())) {
 				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getEmail() + " ya se encuentra registrado");
 			}
-			if(listaUsuarios.get(i).getCelular() == usuarioDTO.getCelular()) {
+			if(listaUsuarios.get(i).getCelular().equals(usuarioDTO.getCelular())) {
 				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El celular :" + usuarioDTO.getCelular() + " ya se encuentra registrado");
 			}			
 		}

@@ -12,4 +12,6 @@ public interface MovimientoRepositorio extends JpaRepository<Movimiento, Long>  
 	public List<Movimiento> findByCuentaId(UUID cuentaId);
 	
 	public List<Movimiento> findByTipoTransaccionId(long tipoTransaccionId);
+	
+	public List<Movimiento> findAllByCuentaIdOrderByFechaCreacionDesc(UUID cuentaId);
 }

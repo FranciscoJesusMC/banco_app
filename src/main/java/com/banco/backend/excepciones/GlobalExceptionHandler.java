@@ -51,7 +51,7 @@ public class GlobalExceptionHandler  extends ResponseEntityExceptionHandler{
 		errores.put(nombreDelCampo, mensaje);
 		
 	});
-		return new ResponseEntity<>(errores,HttpStatus.NOT_FOUND);
+		return new ResponseEntity<>(errores,HttpStatus.BAD_REQUEST);
 	}
 			
 

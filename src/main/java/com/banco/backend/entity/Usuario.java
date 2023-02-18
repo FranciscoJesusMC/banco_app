@@ -5,6 +5,8 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -14,6 +16,7 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import com.banco.backend.utils.Genero;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -34,10 +37,12 @@ public class Usuario {
 	private String nombre;
 	private String apellido;
 	private int edad;
-	private int dni;
+	private String dni;
 	private String email;
-	private int celular;
+	private String celular;
 
+	@Enumerated(EnumType.STRING)
+	private Genero genero;
 	
 	@JsonBackReference(value = "banco-usuario")
 	@ManyToOne(fetch = FetchType.EAGER)

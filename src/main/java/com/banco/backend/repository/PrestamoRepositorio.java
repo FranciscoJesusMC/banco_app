@@ -10,5 +10,7 @@ import com.banco.backend.entity.Prestamo;
 public interface PrestamoRepositorio  extends JpaRepository<Prestamo, Long>{
 	
 	List<Prestamo> findByCuentaId(UUID cuentaId);
+	
+	List<Prestamo> findAllByOrderByFechaCreacionDesc();
 
 }

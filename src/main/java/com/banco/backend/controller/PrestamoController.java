@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -37,17 +36,15 @@ public class PrestamoController {
 		return new ResponseEntity<>(prestamo,HttpStatus.CREATED);
 	}
 	
-	@PutMapping("/aprobarPrestamo/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
-	public ResponseEntity<String> aprobarPrestamo(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId){
-		prestamoService.aprobarPrestamo(bancoId, cuentaId, usuarioId);
-		return new ResponseEntity<>("Prestamo aprobado exitosamente",HttpStatus.OK);
+	@GetMapping("/listarPrestamoAprobado/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
+	public ResponseEntity<List<PrestamoDTO>> listarPrestamoAprobadoPorUsuario(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId){
+		List<PrestamoDTO> prestamos = prestamoService.listarPrestamosAprobados(bancoId, usuarioId, cuentaId);
+		return ResponseEntity.ok(prestamos);
 	}
-	
-	@PutMapping("/rechazarPrestamo/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
-	public ResponseEntity<String> rechazarPrestamo(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId){
-		prestamoService.rechazarPrestamo(bancoId, cuentaId, usuarioId);
-		return new ResponseEntity<>("Prestamo rechzado exitosamente",HttpStatus.OK);
-	}
-	
 		
+	@GetMapping("/listarPrestamoRechazado/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
+	public ResponseEntity<List<PrestamoDTO>> listarPrestamoRechazadoPorUsuario(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId){
+		List<PrestamoDTO> prestamos = prestamoService.listarPrestamosRechazados(bancoId, usuarioId, cuentaId);
+		return ResponseEntity.ok(prestamos);
+	}
 }

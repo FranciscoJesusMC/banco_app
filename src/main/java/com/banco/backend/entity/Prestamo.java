@@ -29,21 +29,21 @@ public class Prestamo extends AudtiModel {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
-	private float importe;
+	private double importe;
 	
-	private float cuotas;
+	private int cuotas;
 
 	@Column(name = "tasa_de_interes")
-	private float tasaDeInteres;
+	private double tasaDeInteres;
 	
 	@Column(name = "interes_a_pagar")
-	private float interesApagar;
+	private double interesApagar;
 	
 	@Column(name = "cuota_mensual")
-	private float cuotaMensual;
+	private double cuotaMensual;
 	
 	@Column(name = "deuda_total")
-	private float deudaTotal;
+	private double deudaTotal;
 	
 	private String estado;
 	

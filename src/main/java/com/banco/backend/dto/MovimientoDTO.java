@@ -1,6 +1,9 @@
 package com.banco.backend.dto;
 
+import java.math.BigDecimal;
 import java.util.Date;
+
+import javax.validation.constraints.NotNull;
 
 import com.banco.backend.entity.DetalleMovimiento;
 
@@ -14,8 +17,9 @@ public class MovimientoDTO {
 	private Date fechaCreacion;
 
 	private TipoTransaccionDTO tipoTransaccion;
-
-	private float monto;
+	
+	@NotNull
+	private BigDecimal monto;
 
 	private DetalleMovimiento detalleMovimiento;
 

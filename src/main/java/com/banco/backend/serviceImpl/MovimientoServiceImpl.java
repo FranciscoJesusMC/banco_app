@@ -1,14 +1,21 @@
 package com.banco.backend.serviceImpl;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.banco.backend.dto.MovimientoDTO;
+import com.banco.backend.dto.PaginacionMovimiento;
 import com.banco.backend.dto.TransferenciaDTO;
 import com.banco.backend.entity.Banco;
 import com.banco.backend.entity.Cuenta;
@@ -70,20 +77,33 @@ public class MovimientoServiceImpl implements MovimientoService {
 	}
 
 	@Override
+	@Transactional
 	public MovimientoDTO agregarSaldo(long bancoId,UUID cuentaId,MovimientoDTO movimientosDTO) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
 		
 		Cuenta cuenta = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
 		
+		BigDecimal cuentaSaldo = new BigDecimal(cuenta.getSaldo().toString());
+		BigDecimal monto = new BigDecimal(movimientosDTO.getMonto().toString());
+		BigDecimal montoMinimo = BigDecimal.ZERO;
+		
+		
 		if(!cuenta.getBanco().getId().equals(banco.getId())) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no pertenece al banco");
 		}
 		
-		if(cuenta.getEstado().equals("Inhabilitado")) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta inhabilitada");
+		if(cuenta.getEstado().equals("Deshabilitada")) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta Deshabilitada");
 		}
 		
-		float nuevoSaldo = cuenta.getSaldo() + movimientosDTO.getMonto();
+		if(monto.compareTo(montoMinimo)  == 0.00) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "EL monto ingresado debe ser mayor que 0.00");
+		}
+		
+		
+		BigDecimal comision = new BigDecimal("0.00");
+		BigDecimal nuevoSaldo = cuentaSaldo.add(monto);
+		
 		cuenta.setSaldo(nuevoSaldo);
 		cuenta.setDepositosDelDia(cuenta.getDepositosDelDia() + 1);
 		cuentaRepositorio.save(cuenta);
@@ -96,8 +116,8 @@ public class MovimientoServiceImpl implements MovimientoService {
 		detalle.setCuentaOrigen(null);
 		detalle.setCuentaDestino(cuentaId);
 		detalle.setBancoDestino(banco.getNombre());
-		detalle.setComision(0);
-		detalle.setMontoTotal(movimientosDTO.getMonto());
+		detalle.setComision(comision);
+		detalle.setMontoTotal(monto);
 		detalleMovimientoRepositorio.save(detalle);
 		
 		
@@ -116,12 +136,20 @@ public class MovimientoServiceImpl implements MovimientoService {
 	}
 
 	@Override
+	@Transactional
 	public MovimientoDTO retiro(long bancoId,long usuarioId, UUID cuentaId, MovimientoDTO movimientosDTO) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
 		
 		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
 		
 		Cuenta cuenta = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
+		
+		
+		BigDecimal saldoCuenta = new BigDecimal(cuenta.getSaldo().toString());
+		BigDecimal monto = new BigDecimal(movimientosDTO.getMonto().toString());
+		
+		int comparacion = saldoCuenta.compareTo(monto);
+		
 		
 		if(!cuenta.getBanco().getId().equals(banco.getId())) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no pertenece al banco");
@@ -131,19 +159,26 @@ public class MovimientoServiceImpl implements MovimientoService {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta : " + cuentaId + "  no pertenece al usuarioId : +" + usuarioId);
 		}
 		
-		if(cuenta.getEstado().equals("Inhabilitado")) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta inhabilitada");
+		if(cuenta.getEstado().equals("Deshabilitada")) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta Deshabilitada");
 		}
 		
-		if(cuenta.getSaldo() < movimientosDTO.getMonto()) {
+		if(comparacion < 0) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no posee el saldo suficiente");
 		}
 		
-	
+		if(cuenta.getLimiteDelDia().compareTo(monto) < 0) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta excedio el  monto limite de retiro por dia que es 500.00");
+		}
+				
 		
-		float nuevoSaldo = cuenta.getSaldo() - movimientosDTO.getMonto();
+		BigDecimal comision = new BigDecimal("0.00");
+		BigDecimal nuevoSaldo = saldoCuenta.subtract(monto);
+		
+		
 		cuenta.setSaldo(nuevoSaldo);
 		cuenta.setRetirorsDelDia(cuenta.getRetirorsDelDia() + 1);
+		cuenta.setLimiteDelDia(cuenta.getLimiteDelDia().subtract(monto));
 		cuentaRepositorio.save(cuenta);
 		
 		
@@ -154,7 +189,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 		detalle.setBancoOrigen(cuenta.getBanco().getNombre());
 		detalle.setBancoDestino(null);
 		detalle.setTitularDestino(null);
-		detalle.setComision(0);
+		detalle.setComision(comision);
 		detalle.setMontoTotal(movimientosDTO.getMonto());
 		detalleMovimientoRepositorio.save(detalle);
 		
@@ -174,6 +209,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 	}
 
 	@Override
+	@Transactional
 	public MovimientoDTO transferenciaBancaria(long bancoId,long usuarioId ,UUID cuentaId, TransferenciaDTO transferenciaDTO) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
 		
@@ -182,10 +218,15 @@ public class MovimientoServiceImpl implements MovimientoService {
 		Cuenta cuentaOrigen = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
 		
 		Cuenta cuentaDestino = cuentaRepositorio.findById(transferenciaDTO.getCuentaDestino()).orElseThrow(()-> new ResourceNotFoundException("Cuenta destino", "id", transferenciaDTO.getCuentaDestino()));
+	
+		BigDecimal saldoCuentaOrigen = new BigDecimal(cuentaOrigen.getSaldo().toString());
+		BigDecimal saldoCuentaDestino = new BigDecimal(cuentaDestino.getSaldo().toString());
+		BigDecimal monto = new BigDecimal(transferenciaDTO.getMonto().toString());
+		BigDecimal comision = new BigDecimal("0.00");
 		
 		
-		if(cuentaOrigen.getEstado().equals("Inhabilitado")) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta inhabilitada");
+		if(cuentaOrigen.getEstado().equals("Deshabilitada")) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta Deshabilitada");
 		}
 		
 		if(!cuentaOrigen.getUsuario().getId().equals(usuario.getId())) {
@@ -200,15 +241,18 @@ public class MovimientoServiceImpl implements MovimientoService {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta destino no pertenece al banco con el id : " + bancoId);	
 		}
 		
-		if(cuentaOrigen.getSaldo() < transferenciaDTO.getMonto()) {
+		if(saldoCuentaOrigen.compareTo(monto) < 0) {
 			throw new BancoAppException(HttpStatus.NOT_FOUND, "La cuenta Origen no posee el saldo suficiente");
 		}
 		
-		float restarSaldo = cuentaOrigen.getSaldo() - transferenciaDTO.getMonto();
+
+		BigDecimal restarSaldo = saldoCuentaOrigen.subtract(monto);
+		
 		cuentaOrigen.setSaldo(restarSaldo);
 		cuentaRepositorio.save(cuentaOrigen);
 		
-		float agregarSaldo = cuentaDestino.getSaldo() + transferenciaDTO.getMonto();
+		BigDecimal agregarSaldo = saldoCuentaDestino.add(monto);
+		
 		cuentaDestino.setSaldo(agregarSaldo);
 		cuentaRepositorio.save(cuentaDestino);
 		
@@ -219,7 +263,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 		detalle.setTitularDestino(cuentaDestino.getUsuario().getNombre());
 		detalle.setCuentaDestino(cuentaDestino.getId());
 		detalle.setBancoDestino(cuentaDestino.getBanco().getNombre());
-		detalle.setComision(0);
+		detalle.setComision(comision);
 		detalle.setMontoTotal(transferenciaDTO.getMonto());
 		detalleMovimientoRepositorio.save(detalle);
 		
@@ -239,6 +283,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 	}
 
 	@Override
+	@Transactional
 	public MovimientoDTO transferenciaInterbancaria(long bancoId,long usuarioId,UUID cuentaId, TransferenciaDTO transferenciaDTO) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
 		
@@ -250,8 +295,14 @@ public class MovimientoServiceImpl implements MovimientoService {
 		
 		Banco bancoDestino = bancoRepositorio.findById(cuentaDestino.getBanco().getId()).orElseThrow(()-> new ResourceNotFoundException("Banco destino", "id", cuentaDestino.getBanco().getId()));
 		
-		if(cuentaOrigen.getEstado().equals("Inhabilitado")) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta inhabilitada");
+		
+		BigDecimal saldoCuentaOrigen = new BigDecimal(cuentaOrigen.getSaldo().toString());
+		BigDecimal saldoCuentaDestino = new BigDecimal(cuentaDestino.getSaldo().toString());
+		BigDecimal monto = new BigDecimal(transferenciaDTO.getMonto().toString());
+		BigDecimal comision = new BigDecimal("5.00");
+		
+		if(cuentaOrigen.getEstado().equals("Deshabilitada")) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta Deshabilitada");
 		}
 		
 		if(!cuentaOrigen.getUsuario().getId().equals(usuario.getId())) {
@@ -272,21 +323,21 @@ public class MovimientoServiceImpl implements MovimientoService {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta destino no debe pertenecer al mismo banco que la cuenta origen");	
 		}
 		
-		if(cuentaOrigen.getSaldo() < transferenciaDTO.getMonto()) {
+		if(saldoCuentaOrigen.compareTo(monto) < 0) {
 			throw new BancoAppException(HttpStatus.NOT_FOUND, "La cuenta Origen no posee el saldo suficiente");
 		}
 		
-		float comision = 5;
 		
-		float restarSaldo = cuentaOrigen.getSaldo() - transferenciaDTO.getMonto();
+		BigDecimal restarSaldo = saldoCuentaOrigen.subtract(monto);
 		cuentaOrigen.setSaldo(restarSaldo);
 		cuentaRepositorio.save(cuentaOrigen);
+				
+		BigDecimal saldoSinComision = saldoCuentaDestino.add(monto);
+		BigDecimal nuevoSaldo = saldoSinComision.subtract(comision);
 		
-		float agregarSaldo = (cuentaDestino.getSaldo() + transferenciaDTO.getMonto()) - comision;
-		cuentaDestino.setSaldo(agregarSaldo);
+		cuentaDestino.setSaldo(nuevoSaldo);
 		cuentaRepositorio.save(cuentaDestino);
 		
-
 		DetalleMovimiento detalle = new DetalleMovimiento();
 		detalle.setTitular(cuentaOrigen.getUsuario().getNombre());
 		detalle.setCuentaOrigen(cuentaOrigen.getId());
@@ -295,7 +346,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 		detalle.setCuentaDestino(cuentaDestino.getId());
 		detalle.setBancoDestino(cuentaDestino.getBanco().getNombre());
 		detalle.setComision(comision);
-		detalle.setMontoTotal(transferenciaDTO.getMonto() - comision);
+		detalle.setMontoTotal(monto.subtract(comision));
 		detalleMovimientoRepositorio.save(detalle);
 		
 		Movimiento movimiento = new Movimiento();
@@ -311,6 +362,47 @@ public class MovimientoServiceImpl implements MovimientoService {
 		MovimientoDTO guardarMovimiento = mapper.movimientotoMovimientoDTO(nuevoMovimiento);
 		
 		return guardarMovimiento;
+	}
+
+	@Override
+	public PaginacionMovimiento paginarMovimientos(int numeroDepagina, int medidaDePagina,String ordenarPor, String sortDir) {
+		Sort sort = sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())?Sort.by(ordenarPor).ascending():Sort.by(ordenarPor).descending();
+		Pageable pageable =  PageRequest.of(numeroDepagina, medidaDePagina,sort);
+		Page<Movimiento> movimientos = movimientosRepositorio.findAll(pageable);
+		
+		List<Movimiento> listaMovimientos = movimientos.getContent();
+		
+		List<MovimientoDTO> contenido = listaMovimientos.stream().map(movimiento ->mapper.movimientotoMovimientoDTO(movimiento)).collect(Collectors.toList());
+		
+		PaginacionMovimiento respuesta = new PaginacionMovimiento();
+		respuesta.setContenido(contenido);
+		respuesta.setNumeroDePagina(movimientos.getNumber());
+		respuesta.setMedidaDePagina(movimientos.getSize());
+		respuesta.setTotalElementos(movimientos.getTotalElements());
+		respuesta.setTotalPaginas(movimientos.getTotalPages());
+		respuesta.setUltima(movimientos.isLast());
+		
+		
+		return respuesta;
+	}
+
+	@Override
+	public List<MovimientoDTO> litarMovimientosRecientes(long bancoId, UUID cuentaId) {
+		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
+		
+		Cuenta cuenta = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
+		
+		if(!cuenta.getBanco().getId().equals(banco.getId())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no pertenece al banco");
+		}
+		
+		List<Movimiento> movimientos = movimientosRepositorio.findAllByCuentaIdOrderByFechaCreacionDesc(cuentaId);
+		
+		if(movimientos.isEmpty()) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no tiene movimientos");
+		}
+		
+		return movimientos.stream().map(movimiento ->mapper.movimientotoMovimientoDTO(movimiento)).collect(Collectors.toList());
 	}
 
 }
