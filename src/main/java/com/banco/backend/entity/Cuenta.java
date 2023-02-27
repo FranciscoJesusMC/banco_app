@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
@@ -17,6 +18,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.PrePersist;
 import javax.persistence.Table;
 
 import org.hibernate.annotations.GenericGenerator;
@@ -24,6 +26,7 @@ import org.hibernate.annotations.Type;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -45,6 +48,9 @@ public class Cuenta extends AudtiModel {
 	  @Type(type = "uuid-char")
 	  private UUID id;
 	  
+
+	  private long cci;
+	  
 	  private BigDecimal saldo;
 	  
 	  private BigDecimal limiteDelDia;
@@ -53,7 +59,7 @@ public class Cuenta extends AudtiModel {
 	  
 	  private int depositosDelDia;
 	  
-	  private int retirorsDelDia;
+	  private int retirosDelDia;
 	  
 	  @JsonBackReference(value = "banco-cuenta")
 	  @ManyToOne
@@ -80,4 +86,14 @@ public class Cuenta extends AudtiModel {
 	  @JsonManagedReference(value = "cuenta-solicitud")
 	  @OneToMany(mappedBy = "cuenta")
 	  private List<SolicitudHabilitarCuenta> solicitudHabilitarCuenta = new ArrayList<>();
+	  
+	  
+	  @PrePersist
+	  public void generarCci() {
+		  Random random = new Random();
+		  cci = random.nextLong() % 10000000000L;
+		  if(cci < 0) {
+			  cci = -cci;
+		  }
+	  }
 }

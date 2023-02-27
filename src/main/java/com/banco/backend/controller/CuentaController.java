@@ -30,6 +30,11 @@ public class CuentaController {
 		return ResponseEntity.ok(cuentas);
 	}
 	
+	@GetMapping("/buscarCuenta/banco/{bancoId}/cuenta/{cuentaId}")
+	public ResponseEntity<CuentaDTO> buscarCuenta (@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "cuentaId")UUID cuentaId){
+		CuentaDTO cuenta = cuentaService.buscarCuentaPorId(bancoId, cuentaId);
+		return ResponseEntity.ok(cuenta);
+	}
 	@PostMapping("/crearCuenta/banco/{bancoId}/usuario/{usuarioId}/tipoCuenta/{tipoCuentaId}")
 	public ResponseEntity<CuentaDTO> crearCuenta(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "tipoCuentaId")long tipoCuentaId){
 		CuentaDTO cuenta = cuentaService.crearCuenta(bancoId, usuarioId, tipoCuentaId);
@@ -37,9 +42,9 @@ public class CuentaController {
 	}
 	
 	@PutMapping("/deshabilitarCuenta/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
-	public ResponseEntity<String> inhabilitarCuenta (@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "cuentaId")UUID cuentaId){
-		cuentaService.deshabilitarCuentaPorUsuario(bancoId, bancoId, cuentaId);
-		return new ResponseEntity<>("Cuenta inhabilitada con exito",HttpStatus.OK);
+	public ResponseEntity<String> inhabilitarCuenta (@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId){
+		cuentaService.deshabilitarCuentaPorUsuario(bancoId, usuarioId, cuentaId);
+		return new ResponseEntity<>("Cuenta deshabilitada con exito",HttpStatus.OK);
 	}
 	
 	

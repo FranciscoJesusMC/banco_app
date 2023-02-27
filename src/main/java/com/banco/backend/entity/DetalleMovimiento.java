@@ -40,6 +40,8 @@ public class DetalleMovimiento {
 	@Column(name = "cuenta_destino", updatable = false, columnDefinition = "VARCHAR(36)")
 	@Type(type = "uuid-char")
 	private UUID cuentaDestino;
+	
+	private long cciDestino;
 
 	private String bancoDestino;
 

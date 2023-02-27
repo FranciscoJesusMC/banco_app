@@ -14,7 +14,8 @@ import lombok.Setter;
 @Setter
 public class UsuarioDTO {
 	
-
+	private Long id;
+	
 	@NotEmpty(message = "EL campo nombre no puede estar vacio")
 	@Size(min = 2 , max = 30,message = "El nombre debe tener un minimo de 2 caracteres y un maximo de 30")
 	@Pattern(regexp = "^[a-zA-Z]+$",message = "Solo esta permitido ingresar letras")
@@ -22,7 +23,7 @@ public class UsuarioDTO {
 	
 	@NotEmpty(message = "EL campo apellido no puede estar vacio")
 	@Size(min = 2 , max = 30,message = "El apellido debe tener un minimo de 2 caracteres y un maximo de 30")
-	@Pattern(regexp = "^[a-zA-Z]+$",message = "Solo esta permitido ingresar letras")
+	@Pattern(regexp = "^[a-zA-Z ]+$",message = "Solo esta permitido ingresar letras")
 	private String apellido;
 	
 	@NotNull(message = "EL campo dni no puede estar vacio")

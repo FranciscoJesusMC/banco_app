@@ -8,12 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.banco.backend.dto.UsuarioDTO;
-import com.banco.backend.entity.Banco;
 import com.banco.backend.entity.Usuario;
 import com.banco.backend.excepciones.BancoAppException;
 import com.banco.backend.excepciones.ResourceNotFoundException;
 import com.banco.backend.mapper.UsuarioMapper;
-import com.banco.backend.repository.BancoRepositorio;
+import com.banco.backend.mapper.UsuarioMapperImpl;
 import com.banco.backend.repository.UsuarioRepositorio;
 import com.banco.backend.service.UsuarioService;
 
@@ -24,45 +23,35 @@ public class UsuarioServiceImpl implements UsuarioService {
 	private UsuarioRepositorio usuarioRepositorio;
 	
 	@Autowired
-	private BancoRepositorio bancoRepositorio;
-	
-	@Autowired
-	private UsuarioMapper mapper;
+	private UsuarioMapper mapper = new UsuarioMapperImpl();
 		
+
 	@Override
-	public List<UsuarioDTO> listarUsuariosPorBanco(long bancoId) {
-		bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
-		
-		List<Usuario> usuarios = usuarioRepositorio.findByBancoId(bancoId);
+	public List<UsuarioDTO> listarUsuariosPorBanco() {
+		List<Usuario> usuarios = usuarioRepositorio.findAll();
 		
 		if(usuarios.isEmpty()) {
-			throw new BancoAppException(HttpStatus.NOT_FOUND, "No hay usuarios registrados en el banco con el id: " +bancoId);
+			throw new BancoAppException(HttpStatus.NOT_FOUND, "No hay usuarios registrados ");
 		}
-		
 		
 		return usuarios.stream().map(usuario -> mapper.usuariotoUsuarioDTO(usuario)).collect(Collectors.toList());
 	}
 	@Override
-	public UsuarioDTO crearUsuario(long bancoId,UsuarioDTO usuarioDTO) {
-		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
-		
-		List<Usuario> listaUsuarios = usuarioRepositorio.findByBancoId(bancoId);
-		
-		for(int i = 0 ;i <listaUsuarios.size(); i++) {
-			if(listaUsuarios.get(i).getDni() == usuarioDTO.getDni()) {
-				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getDni() + " ya se encuentra registrado");
-			}
-			if(listaUsuarios.get(i).getEmail().equals(usuarioDTO.getEmail())) {
-				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getEmail() + " ya se encuentra registrado");
-			}
-			if(listaUsuarios.get(i).getCelular() == usuarioDTO.getCelular()) {
-				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El celular :" + usuarioDTO.getCelular() + " ya se encuentra registrado");
-			}			
-		}
-	
+	public UsuarioDTO crearUsuario(UsuarioDTO usuarioDTO) {	
 		Usuario usuario = mapper.usuarioDTOtoUsuario(usuarioDTO);
 		
-		usuario.setBanco(banco);
+		if(usuarioRepositorio.existsByDni(usuarioDTO.getDni())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getDni() + " ya se encuentra registrado");
+		}
+		
+		if(usuarioRepositorio.existsByEmail(usuarioDTO.getEmail())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "EL email : " + usuarioDTO.getEmail() + " ya se encuentra registrado");
+		}
+		
+		if(usuarioRepositorio.existsByCelular(usuarioDTO.getCelular())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "EL celular : " + usuarioDTO.getCelular() + " ya se encuentra registrado");
+		}
+		
 		Usuario nuevoUsuario =  usuarioRepositorio.save(usuario);
 		
 		UsuarioDTO guardarUsuario = mapper.usuariotoUsuarioDTO(nuevoUsuario);
@@ -70,43 +59,31 @@ public class UsuarioServiceImpl implements UsuarioService {
 		return guardarUsuario;
 		
 	}
+
 	@Override
-	public UsuarioDTO buscarUsuarioPorBancoId(long bancoId, long usuarioId) {
-		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
+	public UsuarioDTO actualizarUsuario(long usuarioId,UsuarioDTO usuarioDTO) {
 		
 		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
-		
-		if(!usuario.getBanco().getId().equals(banco.getId())) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "El usuario : "+ usuarioId + "no pertenece al banco con el id : "+ bancoId );
+			
+		if(usuarioRepositorio.existsByDni(usuarioDTO.getDni())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getDni() + " ya se encuentra registrado");
 		}
 		
-		return mapper.usuariotoUsuarioDTO(usuario);
-	}
-	@Override
-	public UsuarioDTO actualizarUsuario(long bancoId, long usuarioId,UsuarioDTO usuarioDTO) {
+		if(usuarioRepositorio.existsByEmail(usuarioDTO.getEmail())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "EL email : " + usuarioDTO.getEmail() + " ya se encuentra registrado");
+		}
 		
-		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
+		if(usuarioRepositorio.existsByCelular(usuarioDTO.getCelular())) {
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "EL celular : " + usuarioDTO.getCelular() + " ya se encuentra registrado");
+		}
+		
+		usuario.setNombre(usuarioDTO.getNombre());
+		usuario.setApellido(usuarioDTO.getApellido());
+		usuario.setEdad(usuarioDTO.getEdad());
+		usuario.setCelular(usuarioDTO.getCelular());
+		usuario.setDni(usuarioDTO.getDni());
+		usuario.setEmail(usuarioDTO.getEmail());
 	
-		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
-		
-		List<Usuario> listaUsuarios = usuarioRepositorio.findByBancoId(bancoId);
-		
-		if(!usuario.getBanco().getId().equals(banco.getId())) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "EL usuario no pertenece al banco");
-		}
-		
-		for(int i = 0 ;i <listaUsuarios.size(); i++) {
-			if(listaUsuarios.get(i).getDni().equals(usuarioDTO.getDni())) {
-				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getDni() + " ya se encuentra registrado");
-			}
-			if(listaUsuarios.get(i).getEmail().equals(usuarioDTO.getEmail())) {
-				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El dni :" + usuarioDTO.getEmail() + " ya se encuentra registrado");
-			}
-			if(listaUsuarios.get(i).getCelular().equals(usuarioDTO.getCelular())) {
-				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El celular :" + usuarioDTO.getCelular() + " ya se encuentra registrado");
-			}			
-		}
-		
 		Usuario guardarUsuario = usuarioRepositorio.save(usuario);
 		
 		UsuarioDTO actualizarUsuario = mapper.usuariotoUsuarioDTO(guardarUsuario);
@@ -117,15 +94,9 @@ public class UsuarioServiceImpl implements UsuarioService {
 			
 	
 	@Override
-	public void eliminarUsuario(long bancoId, long usuarioId) {
-		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
-		
+	public void eliminarUsuario( long usuarioId) {
 		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
-		
-		if(!usuario.getBanco().getId().equals(banco.getId())) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "El usuario : "+ usuarioId + "no pertenece al banco con el id : "+ bancoId );
-		}
-		
+	
 		usuarioRepositorio.delete(usuario);
 	}
 	

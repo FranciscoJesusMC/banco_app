@@ -10,6 +10,7 @@ import lombok.Setter;
 @Setter
 public class BancoDTO {
 
+	private Long id;
 
 	@NotEmpty(message = "EL campo nombre no puede estar vacio")
 	@Size(min = 5,message = "Nombre del banco debe contener al menos 5 caracteres")

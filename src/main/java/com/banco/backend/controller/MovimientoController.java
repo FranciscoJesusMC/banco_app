@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.banco.backend.dto.MovimientoDTO;
 import com.banco.backend.dto.PaginacionMovimiento;
 import com.banco.backend.dto.TransferenciaDTO;
+import com.banco.backend.dto.TransferenciaInterbancariaDTO;
 import com.banco.backend.service.MovimientoService;
 import com.banco.backend.utils.PaginarMovimiento;
 
@@ -61,8 +62,8 @@ public class MovimientoController {
 	}
 
 	@PutMapping("/transferenciaInterbancaria/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
-	public ResponseEntity<MovimientoDTO> transferenciaInterbancaria(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId,@RequestBody TransferenciaDTO transferenciaDTO){
-		MovimientoDTO movimiento = movimientosService.transferenciaInterbancaria(bancoId,usuarioId, cuentaId, transferenciaDTO);
+	public ResponseEntity<MovimientoDTO> transferenciaInterbancaria(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId,@RequestBody TransferenciaInterbancariaDTO transferenciaInterbancariaDTO){
+		MovimientoDTO movimiento = movimientosService.transferenciaInterbancaria(bancoId,usuarioId, cuentaId, transferenciaInterbancariaDTO);
 		return new ResponseEntity<>(movimiento,HttpStatus.OK);
 	}
 	

@@ -12,6 +12,7 @@ import com.banco.backend.entity.Banco;
 import com.banco.backend.excepciones.BancoAppException;
 import com.banco.backend.excepciones.ResourceNotFoundException;
 import com.banco.backend.mapper.BancoMapper;
+import com.banco.backend.mapper.BancoMapperImpl;
 import com.banco.backend.repository.BancoRepositorio;
 import com.banco.backend.service.BancoService;
 
@@ -22,7 +23,7 @@ public class BancoServiceImpl  implements BancoService {
 	private BancoRepositorio bancoRepositorio;
 	
 	@Autowired
-	private BancoMapper mapper;
+	private BancoMapper mapper = new BancoMapperImpl();
 	
 	
 	@Override

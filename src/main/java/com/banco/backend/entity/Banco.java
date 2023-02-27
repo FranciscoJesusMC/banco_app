@@ -30,10 +30,6 @@ public class Banco {
 	private Long id;
 	private String nombre;
 	
-	@JsonManagedReference(value = "banco-usuario")
-	@OneToMany(mappedBy = "banco", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-	private Set<Usuario> usuario = new HashSet<>();
-
 	@JsonManagedReference(value = "banco-cuenta")
 	@OneToMany(mappedBy = "banco", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
 	private Set<Cuenta> cuenta = new HashSet<>();

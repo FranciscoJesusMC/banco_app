@@ -18,6 +18,7 @@ import com.banco.backend.entity.Usuario;
 import com.banco.backend.excepciones.BancoAppException;
 import com.banco.backend.excepciones.ResourceNotFoundException;
 import com.banco.backend.mapper.CuentaMapper;
+import com.banco.backend.mapper.CuentaMapperImpl;
 import com.banco.backend.repository.BancoRepositorio;
 import com.banco.backend.repository.CuentaRepositorio;
 import com.banco.backend.repository.TipoCuentaRepositorio;
@@ -40,15 +41,17 @@ public class CuentaServiceImpl  implements CuentaService{
 	private TipoCuentaRepositorio tipoCuentaRepositorio;
 	
 	@Autowired
-	private CuentaMapper mapper;
+	private CuentaMapper mapper = new CuentaMapperImpl();
 
 
 
 	@Override
 	public List<CuentaDTO> listarCuentasPorUsuarioId(long bancoId, long usuarioId) {
-		bancoRepositorio.findById(bancoId).orElseThrow(() -> new ResourceNotFoundException("Banco", "id", bancoId));
+		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(() -> new ResourceNotFoundException("Banco", "id", bancoId));
 		
-		List<Cuenta> cuentas = cuentaRepositorio.findByUsuarioId(usuarioId);
+		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
+		
+		List<Cuenta> cuentas = cuentaRepositorio.findByUsuarioIdAndBancoId(usuario.getId(), banco.getId());
 		
 		if(cuentas.isEmpty()) {
 			throw new BancoAppException(HttpStatus.NOT_FOUND, "El usuario con el id :" + usuarioId + "no tiene cuentas registradas en el banco con el id : " +bancoId);
@@ -79,20 +82,19 @@ public class CuentaServiceImpl  implements CuentaService{
 		TipoCuenta tipoCuenta = tipoCuentaRepositorio.findById(tipoCuentaId).orElseThrow(()-> new ResourceNotFoundException("TipoCuenta", "id", tipoCuentaId));
 		
 		List<Cuenta> lista = cuentaRepositorio.findByUsuarioId(usuarioId);
-		
-		for(int i = 0;i <lista.size();i++) {
-			if(lista.get(i).getTipoCuenta().getId().equals(tipoCuentaId)) {
-				throw new BancoAppException(HttpStatus.NOT_FOUND, "El usuario con el id :" + usuarioId +" ya tiene un tipo de cuenta con el id :" + tipoCuentaId + " en el banco con el id: " + bancoId);
+				
+		lista.forEach(cuentita ->{
+			if(cuentita.getTipoCuenta().getId().equals(tipoCuentaId) && cuentita.getBanco().getId().equals(bancoId)) {
+				throw new BancoAppException(HttpStatus.BAD_REQUEST, "El usuario con el id :" + usuarioId +" ya tiene un tipo de cuenta con el id :" + tipoCuentaId + " en el banco con el id: " + bancoId);
 			}
-		}
+		});
 		
 		
 		Cuenta cuenta = new Cuenta();
-		
 		cuenta.setBanco(banco);
 		cuenta.setUsuario(usuario);
 		cuenta.setTipoCuenta(tipoCuenta);
-		cuenta.setEstado("Deshabilitada");
+		cuenta.setEstado("Habilitada");
 		cuenta.setSaldo(new BigDecimal("0.00"));
 		cuenta.setLimiteDelDia(new BigDecimal("500.00"));
 		
@@ -122,7 +124,7 @@ public class CuentaServiceImpl  implements CuentaService{
 		}
 		
 		if(cuenta.getEstado().equals("Deshabilitada")) {
-			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta actualmente esta inhabilitado");
+			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta actualmente esta deshabilitada");
 		}
 		
 		cuenta.setEstado("Deshabilitada");
@@ -137,7 +139,7 @@ public class CuentaServiceImpl  implements CuentaService{
 		List<Cuenta> cuentas = cuentaRepositorio.findAll();
 		cuentas.forEach(cuenta ->{
 			cuenta.setDepositosDelDia(0);
-			cuenta.setRetirorsDelDia(0);
+			cuenta.setRetirosDelDia(0);
 			cuenta.setLimiteDelDia(new BigDecimal("500.00"));
 			cuentaRepositorio.save(cuenta);
 		});

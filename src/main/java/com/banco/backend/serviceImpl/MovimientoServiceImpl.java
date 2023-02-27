@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.banco.backend.dto.MovimientoDTO;
 import com.banco.backend.dto.PaginacionMovimiento;
 import com.banco.backend.dto.TransferenciaDTO;
+import com.banco.backend.dto.TransferenciaInterbancariaDTO;
 import com.banco.backend.entity.Banco;
 import com.banco.backend.entity.Cuenta;
 import com.banco.backend.entity.DetalleMovimiento;
@@ -26,6 +27,7 @@ import com.banco.backend.entity.Usuario;
 import com.banco.backend.excepciones.BancoAppException;
 import com.banco.backend.excepciones.ResourceNotFoundException;
 import com.banco.backend.mapper.MovimientoMapper;
+import com.banco.backend.mapper.MovimientoMapperImpl;
 import com.banco.backend.repository.BancoRepositorio;
 import com.banco.backend.repository.CuentaRepositorio;
 import com.banco.backend.repository.DetalleMovimientoRepositorio;
@@ -56,7 +58,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 	private UsuarioRepositorio usuarioRepositorio;
 	
 	@Autowired
-	private MovimientoMapper mapper;
+	private MovimientoMapper mapper = new MovimientoMapperImpl();
 
 	@Override
 	public List<MovimientoDTO> listarMovimientosPorCuenta(long bancoId,UUID cuentaId) {
@@ -147,9 +149,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 		
 		BigDecimal saldoCuenta = new BigDecimal(cuenta.getSaldo().toString());
 		BigDecimal monto = new BigDecimal(movimientosDTO.getMonto().toString());
-		
-		int comparacion = saldoCuenta.compareTo(monto);
-		
+				
 		
 		if(!cuenta.getBanco().getId().equals(banco.getId())) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no pertenece al banco");
@@ -163,7 +163,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta esta Deshabilitada");
 		}
 		
-		if(comparacion < 0) {
+		if(saldoCuenta.compareTo(monto) < 0) {
 			throw new BancoAppException(HttpStatus.BAD_REQUEST, "La cuenta no posee el saldo suficiente");
 		}
 		
@@ -177,7 +177,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 		
 		
 		cuenta.setSaldo(nuevoSaldo);
-		cuenta.setRetirorsDelDia(cuenta.getRetirorsDelDia() + 1);
+		cuenta.setRetirosDelDia(cuenta.getRetirosDelDia() + 1);
 		cuenta.setLimiteDelDia(cuenta.getLimiteDelDia().subtract(monto));
 		cuentaRepositorio.save(cuenta);
 		
@@ -284,21 +284,21 @@ public class MovimientoServiceImpl implements MovimientoService {
 
 	@Override
 	@Transactional
-	public MovimientoDTO transferenciaInterbancaria(long bancoId,long usuarioId,UUID cuentaId, TransferenciaDTO transferenciaDTO) {
+	public MovimientoDTO transferenciaInterbancaria(long bancoId,long usuarioId,UUID cuentaId, TransferenciaInterbancariaDTO transferenciaInterbancariaDTO) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
 		
 		Usuario usuario = usuarioRepositorio.findById(usuarioId).orElseThrow(()-> new ResourceNotFoundException("Usuario", "id", usuarioId));
 		
 		Cuenta cuentaOrigen = cuentaRepositorio.findById(cuentaId).orElseThrow(()-> new ResourceNotFoundException("Cuenta", "id", cuentaId));
 		
-		Cuenta cuentaDestino = cuentaRepositorio.findById(transferenciaDTO.getCuentaDestino()).orElseThrow(()-> new ResourceNotFoundException("Cuenta destino", "id", transferenciaDTO.getCuentaDestino()));
+		Cuenta cuentaDestino = cuentaRepositorio.findByCci(transferenciaInterbancariaDTO.getCuentaDestino()).orElseThrow(()-> new ResourceNotFoundException("Cuenta destino", "id", transferenciaInterbancariaDTO.getCuentaDestino()));
 		
 		Banco bancoDestino = bancoRepositorio.findById(cuentaDestino.getBanco().getId()).orElseThrow(()-> new ResourceNotFoundException("Banco destino", "id", cuentaDestino.getBanco().getId()));
 		
 		
 		BigDecimal saldoCuentaOrigen = new BigDecimal(cuentaOrigen.getSaldo().toString());
 		BigDecimal saldoCuentaDestino = new BigDecimal(cuentaDestino.getSaldo().toString());
-		BigDecimal monto = new BigDecimal(transferenciaDTO.getMonto().toString());
+		BigDecimal monto = new BigDecimal(transferenciaInterbancariaDTO.getMonto().toString());
 		BigDecimal comision = new BigDecimal("5.00");
 		
 		if(cuentaOrigen.getEstado().equals("Deshabilitada")) {
@@ -343,7 +343,8 @@ public class MovimientoServiceImpl implements MovimientoService {
 		detalle.setCuentaOrigen(cuentaOrigen.getId());
 		detalle.setBancoOrigen(cuentaOrigen.getBanco().getNombre());
 		detalle.setTitularDestino(cuentaDestino.getUsuario().getNombre());
-		detalle.setCuentaDestino(cuentaDestino.getId());
+		detalle.setCuentaDestino(null);
+		detalle.setCciDestino(cuentaDestino.getCci());
 		detalle.setBancoDestino(cuentaDestino.getBanco().getNombre());
 		detalle.setComision(comision);
 		detalle.setMontoTotal(monto.subtract(comision));
@@ -351,7 +352,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 		
 		Movimiento movimiento = new Movimiento();
 		movimiento.setCuenta(cuentaOrigen);
-		movimiento.setMonto(transferenciaDTO.getMonto());
+		movimiento.setMonto(transferenciaInterbancariaDTO.getMonto());
 		movimiento.setDetalleMovimiento(detalle);
 		
 		TipoTransaccion tipo = tipoTransaccionRepositorio.findByNombre("Transferencia_interbancaria").get();

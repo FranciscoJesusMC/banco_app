@@ -27,34 +27,34 @@ public class UsuarioController {
 	private UsuarioService usuarioService;
 	
 	
-	@GetMapping("/listarUsuarios/banco/{bancoId}")
-	public ResponseEntity<List<UsuarioDTO>> listarUsuariosPorBanco(@PathVariable(name = "bancoId")long bancoId){
-		List<UsuarioDTO> usuarios = usuarioService.listarUsuariosPorBanco(bancoId);
+	@GetMapping("/listarUsuarios")
+	public ResponseEntity<List<UsuarioDTO>> listarUsuariosPorBanco(){
+		List<UsuarioDTO> usuarios = usuarioService.listarUsuariosPorBanco();
 		return ResponseEntity.ok(usuarios);
 	}
 
-	@GetMapping("/buscarUsuario/banco/{bancoId}/usuario/{usuarioId}")
-	public ResponseEntity<UsuarioDTO> buscarUsuarioPorId(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId){
-		UsuarioDTO usuario = usuarioService.buscarUsuarioPorBancoId(bancoId, usuarioId);
+	@GetMapping("/buscarUsuario/{usuarioId}")
+	public ResponseEntity<UsuarioDTO> buscarUsuarioPorId(@PathVariable(name = "usuarioId")long usuarioId){
+		UsuarioDTO usuario = usuarioService.buscarUsuario(usuarioId);
 		return ResponseEntity.ok(usuario);
 	}
 	
-	@PostMapping("/crearUsuario/banco/{bancoId}")
-	public ResponseEntity<UsuarioDTO> crearUsuario(@PathVariable(name = "bancoId")long bancoId,@Valid @RequestBody UsuarioDTO usuarioDTO){
-		UsuarioDTO usuario = usuarioService.crearUsuario(bancoId, usuarioDTO);
+	@PostMapping("/crearUsuario")
+	public ResponseEntity<UsuarioDTO> crearUsuario(@Valid @RequestBody UsuarioDTO usuarioDTO){
+		UsuarioDTO usuario = usuarioService.crearUsuario(usuarioDTO);
 		return new ResponseEntity<>(usuario,HttpStatus.CREATED);
 	}
 	
-	@PutMapping("/actualizarUsuario/banco/{bancoId}/usuario/{usuarioId}")
-	public ResponseEntity<String> actualizarUsuario(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@RequestBody UsuarioDTO usuarioDTO){
-		usuarioService.actualizarUsuario(bancoId, usuarioId, usuarioDTO);
+	@PutMapping("/actualizarUsuario/{usuarioId}")
+	public ResponseEntity<String> actualizarUsuario(@PathVariable(name = "usuarioId")long usuarioId,@Valid @RequestBody UsuarioDTO usuarioDTO){
+		usuarioService.actualizarUsuario(usuarioId, usuarioDTO);
 		return new ResponseEntity<>("Usuario actualizado con exito",HttpStatus.OK);
 	}
 	
-	@DeleteMapping("/eliminarUsuario/banco/{bancoId}/usuario/{usuarioId}")
-	public ResponseEntity<String> eliminarUsuario(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId){
-		usuarioService.eliminarUsuario(bancoId, usuarioId);
-		return new ResponseEntity<>("Usuario eliminado con exito",HttpStatus.OK);
+	@DeleteMapping("/eliminarUsuario/{usuarioId}")
+	public ResponseEntity<String> eliminarUsuario(@PathVariable(name = "usuarioId")long usuarioId){
+		usuarioService.eliminarUsuario( usuarioId);
+		return new ResponseEntity<>("Usuario eliminado con exito",HttpStatus.NO_CONTENT);
 	}
 
 }

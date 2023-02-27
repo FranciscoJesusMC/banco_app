@@ -8,6 +8,8 @@ import lombok.Setter;
 @Getter
 @Setter
 public class TipoCuentaDTO {
+	
+	private Long id;
 
 	@NotEmpty(message = "El campo nombre no puede estar vacio")
 	private String nombre;

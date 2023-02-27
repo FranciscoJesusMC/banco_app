@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.banco.backend.dto.MovimientoDTO;
 import com.banco.backend.dto.PaginacionMovimiento;
 import com.banco.backend.dto.TransferenciaDTO;
+import com.banco.backend.dto.TransferenciaInterbancariaDTO;
 
 public interface MovimientoService {
 	
@@ -19,7 +20,7 @@ public interface MovimientoService {
 	
 	public MovimientoDTO transferenciaBancaria(long bancoId,long usuarioId,UUID cuentaId, TransferenciaDTO transferenciaDTO);
 	
-	public MovimientoDTO transferenciaInterbancaria(long bancoId,long usuarioId,UUID cuentaId,TransferenciaDTO transferenciaDTO);
+	public MovimientoDTO transferenciaInterbancaria(long bancoId,long usuarioId,UUID cuentaId,TransferenciaInterbancariaDTO transferenciaInterbancariaDTO);
 
 	public List<MovimientoDTO> litarMovimientosRecientes(long bancoId, UUID cuentaId);
 }

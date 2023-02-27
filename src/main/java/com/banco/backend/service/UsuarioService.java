@@ -6,16 +6,14 @@ import com.banco.backend.dto.UsuarioDTO;
 
 public interface UsuarioService {
 	
-	public List<UsuarioDTO> listarUsuariosPorBanco(long bancoId);
+	public List<UsuarioDTO> listarUsuariosPorBanco();
 	
-	public UsuarioDTO crearUsuario(long bancoId,UsuarioDTO usuarioDTO);
+	public UsuarioDTO crearUsuario(UsuarioDTO usuarioDTO);
 	
 	public UsuarioDTO buscarUsuario(long usuarioId);
 	
-	public UsuarioDTO buscarUsuarioPorBancoId(long bancoId,long usuarioId);
+	public UsuarioDTO actualizarUsuario(long usuarioId,UsuarioDTO usuarioDTO);
 	
-	public UsuarioDTO actualizarUsuario(long bancoId,long usuarioId,UsuarioDTO usuarioDTO);
-	
-	public void eliminarUsuario(long bancoId,long usuarioId);
+	public void eliminarUsuario(long usuarioId);
 
 }

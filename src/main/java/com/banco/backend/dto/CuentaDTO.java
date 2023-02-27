@@ -12,6 +12,8 @@ import lombok.Setter;
 public class CuentaDTO {
 
 	private UUID id;
+	
+	private long cci;
 		
 	private int depositosDelDia;
 	
@@ -22,4 +24,10 @@ public class CuentaDTO {
 	private BigDecimal limiteDelDia;
 
 	private TipoCuentaDTO tipoCuenta;
+	
+	private BancoDTO banco;
+	
+	private UsuarioDTO usuario;
+	
+	private String estado;
 }

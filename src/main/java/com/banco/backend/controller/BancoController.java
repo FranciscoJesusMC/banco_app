@@ -54,6 +54,6 @@ public class BancoController {
 	@DeleteMapping("/{bancoId}")
 	public ResponseEntity<String> eliminarBanco(@PathVariable(name = "bancoId")long bancoId){
 		service.eliminarBanco(bancoId);
-		return new ResponseEntity<>("Banco eliminado con exito",HttpStatus.OK);
+		return new ResponseEntity<>("Banco eliminado con exito",HttpStatus.NO_CONTENT);
 	}
 }
