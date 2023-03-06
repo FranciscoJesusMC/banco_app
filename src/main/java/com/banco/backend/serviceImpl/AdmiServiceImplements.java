@@ -51,6 +51,9 @@ public class AdmiServiceImplements implements AdminService {
 	
 	@Autowired
 	private SolicitudHabilitarCuentaMapper mapperSolicitud;
+	
+	@Autowired
+	private AccionesAdminServiceImpl acciones;
 
 
 	@Override
@@ -60,6 +63,7 @@ public class AdmiServiceImplements implements AdminService {
 			cuenta.setLimiteDelDia(new BigDecimal(500.00));
 			cuentaRepositorio.save(cuenta);
 		}
+		
 		
 	}
 
@@ -71,6 +75,7 @@ public class AdmiServiceImplements implements AdminService {
 			cuentaRepositorio.save(cuenta);
 		}
 		
+		acciones.realizarAccion("Inhabilitar todas las cuentas", 0,null, "Cuentas inhabilitadas con exito");
 	}
 
 	@Override
@@ -80,6 +85,7 @@ public class AdmiServiceImplements implements AdminService {
 			cuenta.setEstado("Habilitada");
 			cuentaRepositorio.save(cuenta);
 		}
+		acciones.realizarAccion("Habilitar todas las cuentas", 0,null, "Cuentas habilitadas con exito");
 		
 	}
 	
@@ -118,6 +124,8 @@ public class AdmiServiceImplements implements AdminService {
 		cuenta.setSaldo(nuevoSaldo);
 		cuentaRepositorio.save(cuenta);
 		
+		
+		acciones.realizarAccion("Aprobar prestamo", prestamoId,cuentaId, "Prestamo apraobado con exito");
 	}
 
 	@Override
@@ -144,7 +152,7 @@ public class AdmiServiceImplements implements AdminService {
 		prestamoRepositorio.save(prestamo);
 		
 
-		
+		acciones.realizarAccion("Rechazar prestamo", prestamoId,null, "Prestamo rechazado con exito");
 		
 		
 	}
@@ -166,6 +174,8 @@ public class AdmiServiceImplements implements AdminService {
 		cuenta.setEstado("Habilitada");
 		cuentaRepositorio.save(cuenta);
 		
+		acciones.realizarAccion("Habilitar cuenta", 0,cuentaId, "Cuentas habilitada con exito");
+		
 	}
 	
 	@Override
@@ -184,6 +194,8 @@ public class AdmiServiceImplements implements AdminService {
 		
 		cuenta.setEstado("Deshabilitada");
 		cuentaRepositorio.save(cuenta);
+		
+		acciones.realizarAccion("Deshabilitar cuenta", 0,cuentaId, "Cuentas deshabilitada con exito");
 		
 	}
 
@@ -233,6 +245,8 @@ public class AdmiServiceImplements implements AdminService {
 		}
 		
 		cuentaRepositorio.delete(cuenta);
+		
+		acciones.realizarAccion("Eliminar cuenta", 0,cuentaId, "Cuentas eliminada con exito");
 		
 	}
 

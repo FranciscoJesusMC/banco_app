@@ -25,6 +25,9 @@ public class BancoServiceImpl  implements BancoService {
 	@Autowired
 	private BancoMapper mapper = new BancoMapperImpl();
 	
+	@Autowired
+	private AccionesAdminServiceImpl acciones;
+	
 	
 	@Override
 	public List<BancoDTO> listarBancos() {
@@ -66,13 +69,17 @@ public class BancoServiceImpl  implements BancoService {
 		
 		BancoDTO guardarBanco = mapper.bancotoBancoDTO(actualizarBanco);
 		
+		acciones.realizarAccion("Actualizar banco", bancoId,null, "Banco actualizado con exito");
 		return guardarBanco;
+		
 	}
 
 	@Override
 	public void eliminarBanco(long bancoId) {
 		Banco banco = bancoRepositorio.findById(bancoId).orElseThrow(()-> new ResourceNotFoundException("Banco", "id", bancoId));
 		bancoRepositorio.delete(banco);
+		
+		acciones.realizarAccion("Eliminar banco", bancoId,null, "Banco eliminado con exito");
 		
 	}
 	

@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -37,36 +38,42 @@ public class MovimientoController {
 		return movimientosService.paginarMovimientos(numeroDePagina, medidaDePagina, ordenarPor, sortDir);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_USER')")
 	@GetMapping("listar/banco/{bancoId}/cuenta/{cuentaId}")
 	public ResponseEntity<List<MovimientoDTO>> listarMovimientosPorCuentaId(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "cuentaId")UUID cuentaId){
 		List<MovimientoDTO> movimientos = movimientosService.listarMovimientosPorCuenta(bancoId,cuentaId);
 		return ResponseEntity.ok(movimientos);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@PutMapping("/agregarSaldo/banco/{bancoId}/cuenta/{cuentaId}")
 	public ResponseEntity<MovimientoDTO> agregarSaldo(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "cuentaId")UUID cuentaId,@RequestBody MovimientoDTO movimientosDTO){
 		MovimientoDTO movimiento = movimientosService.agregarSaldo(bancoId, cuentaId, movimientosDTO);
 		return new ResponseEntity<>(movimiento,HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_USER')")
 	@PutMapping("/retiro/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
 	public ResponseEntity<MovimientoDTO> retiro(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId,@RequestBody MovimientoDTO movimientosDTO){
 		MovimientoDTO movimiento = movimientosService.retiro(bancoId, usuarioId,cuentaId, movimientosDTO);
 		return new ResponseEntity<>(movimiento,HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_USER')")
 	@PutMapping("/transferenciaBancaria/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
 	public ResponseEntity<MovimientoDTO> transferenciaBancaria(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId,@RequestBody TransferenciaDTO transferenciaDTO){
 		MovimientoDTO movimiento = movimientosService.transferenciaBancaria(bancoId,usuarioId, cuentaId, transferenciaDTO);
 		return new ResponseEntity<>(movimiento,HttpStatus.OK);
 	}
 
+	@PreAuthorize("hasRole('ROLE_USER')")
 	@PutMapping("/transferenciaInterbancaria/banco/{bancoId}/usuario/{usuarioId}/cuenta/{cuentaId}")
 	public ResponseEntity<MovimientoDTO> transferenciaInterbancaria(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "usuarioId")long usuarioId,@PathVariable(name = "cuentaId")UUID cuentaId,@RequestBody TransferenciaInterbancariaDTO transferenciaInterbancariaDTO){
 		MovimientoDTO movimiento = movimientosService.transferenciaInterbancaria(bancoId,usuarioId, cuentaId, transferenciaInterbancariaDTO);
 		return new ResponseEntity<>(movimiento,HttpStatus.OK);
 	}
 	
+	@PreAuthorize("hasAnyRole('ROLE_USER','ROLE_ADMIN')")
 	@GetMapping("/listarMovimientosRecientes/banco/{bancoId}/cuenta/{cuentaId}")
 	public ResponseEntity<List<MovimientoDTO>> listarMovimientosRecientes(@PathVariable(name = "bancoId")long bancoId,@PathVariable(name = "cuentaId")UUID cuentaId){
 		List<MovimientoDTO> movimientos = movimientosService.litarMovimientosRecientes(bancoId, cuentaId);

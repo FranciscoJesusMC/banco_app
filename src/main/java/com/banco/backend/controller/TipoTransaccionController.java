@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,12 +31,14 @@ public class TipoTransaccionController {
 		return ResponseEntity.ok(tipos);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@PostMapping
 	public ResponseEntity<TipoTransaccionDTO> crearTipoDeTransaccion(@RequestBody TipoTransaccionDTO tipoTransaccionDTO){
 		TipoTransaccionDTO tipo = tipoTransaccionService.crearTipoDeTransaccion(tipoTransaccionDTO);
 		return new ResponseEntity<>(tipo,HttpStatus.CREATED);
 	}
 	
+	@PreAuthorize("hasRole('ROLE_ADMIN')")
 	@DeleteMapping("/{tipoTransaccionId}")
 	public ResponseEntity<String> eliminarTipoDeTransaccion(@PathVariable(name = "tipoTransaccionId")long tipoTransaccionId){
 		tipoTransaccionService.eliminarTipoDeTransaccion(tipoTransaccionId);

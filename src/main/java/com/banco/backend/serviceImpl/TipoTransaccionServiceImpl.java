@@ -23,6 +23,9 @@ public class TipoTransaccionServiceImpl implements TipoTransaccionService {
 	
 	@Autowired
 	private TipoTransaccionMapper mapper;
+	
+	@Autowired
+	private AccionesAdminServiceImpl acciones;
 
 	@Override
 	public List<TipoTransaccionDTO> listarTiposDeTransaccion() {
@@ -40,6 +43,8 @@ public class TipoTransaccionServiceImpl implements TipoTransaccionService {
 		TipoTransaccion nuevoTipo = tipoTransaccionRepositorio.save(tipoTransaccion);
 		
 		TipoTransaccionDTO guardarTipo = mapper.tipoTransacciontoTipoTransaccionDTO(nuevoTipo);
+		
+		acciones.realizarAccion("Crear tipo de transaccion", tipoTransaccion.getId(),null, "Tipo de transaccion creado con exito");
 		return guardarTipo;
 	}
 
@@ -47,6 +52,9 @@ public class TipoTransaccionServiceImpl implements TipoTransaccionService {
 	public void eliminarTipoDeTransaccion(long tipoTransaccionId) {
 		TipoTransaccion tipoTransaccion = tipoTransaccionRepositorio.findById(tipoTransaccionId).orElseThrow(()-> new ResourceNotFoundException("TipoTransaccion", "id", tipoTransaccionId));
 		tipoTransaccionRepositorio.delete(tipoTransaccion);
+		
+		acciones.realizarAccion("Eliminar tipo de transaccion", tipoTransaccionId,null, "Tipo de transaccion eliminado con exito");
+		
 		
 	}
 

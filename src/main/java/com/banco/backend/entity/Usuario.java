@@ -11,6 +11,9 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -37,6 +40,8 @@ public class Usuario {
 	private String dni;
 	private String email;
 	private String celular;
+	private String username;
+	private String password;
 
 	@Enumerated(EnumType.STRING)
 	private Genero genero;
@@ -44,5 +49,10 @@ public class Usuario {
 	@JsonManagedReference(value = "usuario-cuenta")
 	@OneToMany(mappedBy = "usuario",cascade = CascadeType.ALL,fetch = FetchType.LAZY)
 	private Set<Cuenta> cuenta = new HashSet<>();
+	
+	
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "usuario_roles",joinColumns = @JoinColumn(name="usuario_id",referencedColumnName = "id"),inverseJoinColumns = @JoinColumn(name="rol_id",referencedColumnName = "id"))
+	private Set<Rol> rol = new HashSet<>();
 
 }

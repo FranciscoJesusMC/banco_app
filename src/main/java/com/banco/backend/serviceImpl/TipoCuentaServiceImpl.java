@@ -25,6 +25,9 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 
 	@Autowired
 	private TipoCuentaMapper mapper;
+	
+	@Autowired
+	private AccionesAdminServiceImpl acciones;
 
 
 	@Override
@@ -54,6 +57,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 		
 		TipoCuentaDTO guardarCuenta = mapper.tipoCuentatoTipoCuentaDTO(nuevo);
 		
+		acciones.realizarAccion("Crear tipo de cuenta", tipoCuenta.getId(),null, "Tipo de cuenta creado con exito");
 		return guardarCuenta;
 	}
 
@@ -69,6 +73,7 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 		
 		TipoCuentaDTO guardar = mapper.tipoCuentatoTipoCuentaDTO(actualizarTipoCuenta);
 		
+		acciones.realizarAccion("Actualizar tipo de cuenta", tipoCuentaId,null, "Tipo de cuenta actualizado con exito");
 		return guardar;
 	}
 
@@ -77,6 +82,8 @@ public class TipoCuentaServiceImpl implements TipoCuentaService {
 	public void eliminarTipoCuenta(long tipoCuentaId) {
 		TipoCuenta tipoCuenta = tipoCuentaRepositorio.findById(tipoCuentaId).orElseThrow(()-> new ResourceNotFoundException("TipoCuenta", "id", tipoCuentaId));
 		tipoCuentaRepositorio.delete(tipoCuenta);
+		
+		acciones.realizarAccion("Eliminar tipo de cuenta", tipoCuenta.getId(),null, "Tipo de cuenta eliminado con exito");
 		
 	}
 }

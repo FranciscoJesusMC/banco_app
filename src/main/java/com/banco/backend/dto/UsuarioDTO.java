@@ -47,5 +47,15 @@ public class UsuarioDTO {
 	@Size(min = 9 , max = 9, message = "El celular debe tener 9 digitos")
 	@Pattern(regexp = "^[0-9]+$",message = "Solo esta permitido ingresar numeros")
 	private String celular;
+	
+	@NotEmpty(message = "EL campo username no puede estar vacio")
+	@Size(min = 2 , max = 30,message = "El username debe tener un minimo de 2 caracteres y un maximo de 30")
+	@Pattern(regexp = "^[a-zA-Z]+$",message = "Solo esta permitido ingresar letras")
+	private String username;
+	
+	@NotEmpty(message = "EL campo password no puede estar vacio")
+	@Size(min = 2 , max = 30,message = "El password debe tener un minimo de 2 caracteres y un maximo de 30")
+	@Pattern(regexp = "^[a-zA-Z0-9]+$",message = "Solo esta permitido ingresar letras")
+	private String password;
 
 }

@@ -11,9 +11,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableTransactionManagement
 @SpringBootApplication
 @EnableScheduling
-//@EnableJpaAuditing
-@EntityScan("com.banco.backend.entity")
-@ComponentScan("com.banco.backend.service")
+@EnableJpaAuditing
+//@EntityScan("com.banco.backend.entity")
+//@ComponentScan("com.banco.backend.service")
 public class BancoAppApplication {
 
 	public static void main(String[] args) {
